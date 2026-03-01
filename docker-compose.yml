@@ -1,0 +1,13 @@
+services:
+    mariadb:
+        image: mariadb
+        container_name: mariadb-js-explorer
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+        ports:
+            - "3306:3306"
+        volumes:
+            - js-explorer-db:/var/lib/mysql
+
+volumes:
+    js-explorer-db:
