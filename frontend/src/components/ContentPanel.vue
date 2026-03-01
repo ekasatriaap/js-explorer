@@ -18,11 +18,29 @@
             d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
           ></path>
         </svg>
-        <span class="text-gray-500 font-medium">This Desktop</span>
-        <span v-if="store.activeFolderId" class="mx-2 text-gray-300">/</span>
-        <span v-if="store.activeFolderId" class="text-gray-800 font-semibold">{{
-          currentFolderName
-        }}</span>
+        <span
+          class="text-gray-500 font-medium cursor-pointer hover:text-blue-600 transition-colors"
+          @click="resetToHome"
+          >This Desktop</span
+        >
+
+        <!-- Search Breadcrumb -->
+        <template v-if="store.isSearching">
+          <span class="mx-2 text-gray-300">/</span>
+          <span class="text-gray-800 font-semibold"
+            >Search Results for "{{ store.searchQuery }}"</span
+          >
+        </template>
+
+        <!-- Folder Breadcrumb -->
+        <template v-else>
+          <span v-if="store.activeFolderId" class="mx-2 text-gray-300">/</span>
+          <span
+            v-if="store.activeFolderId"
+            class="text-gray-800 font-semibold"
+            >{{ currentFolderName }}</span
+          >
+        </template>
       </div>
     </div>
 
@@ -54,7 +72,7 @@
       </div>
 
       <div
-        v-else-if="!store.activeFolderId"
+        v-else-if="!store.activeFolderId && !store.isSearching"
         class="h-full w-full flex flex-col items-center justify-center text-gray-400"
       >
         <svg
@@ -79,7 +97,12 @@
         v-else-if="isEmpty"
         class="h-full w-full flex flex-col items-center justify-center text-gray-400"
       >
-        <p class="text-lg font-medium text-gray-500">This folder is empty.</p>
+        <p v-if="store.isSearching" class="text-lg font-medium text-gray-500">
+          No results found for "{{ store.searchQuery }}".
+        </p>
+        <p v-else class="text-lg font-medium text-gray-500">
+          This folder is empty.
+        </p>
       </div>
 
       <!-- Grid View -->
@@ -142,6 +165,10 @@ import { computed } from "vue";
 import { useExplorerStore } from "../store/explorer";
 
 const store = useExplorerStore();
+
+const resetToHome = () => {
+  store.performSearch(""); // Empty search resets everything
+};
 
 const isEmpty = computed(() => {
   return (

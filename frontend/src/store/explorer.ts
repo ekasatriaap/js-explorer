@@ -22,7 +22,7 @@ export interface File {
 }
 
 export const useExplorerStore = defineStore("explorer", () => {
-  const { fetchFolderTree, fetchFolderContents } = useExplorer();
+  const { fetchFolderTree, fetchFolderContents, search } = useExplorer();
 
   const folderTree = ref<Folder[]>([]);
   const activeFolderId = ref<string | null>(null);
@@ -36,6 +36,9 @@ export const useExplorerStore = defineStore("explorer", () => {
   const loadingTree = ref(false);
   const loadingContents = ref(false);
 
+  const isSearching = ref(false);
+  const searchQuery = ref("");
+
   const loadTree = async () => {
     loadingTree.value = true;
     try {
@@ -48,6 +51,8 @@ export const useExplorerStore = defineStore("explorer", () => {
   };
 
   const selectFolder = async (folderId: string) => {
+    isSearching.value = false;
+    searchQuery.value = "";
     activeFolderId.value = folderId;
     loadingContents.value = true;
     try {
@@ -59,13 +64,42 @@ export const useExplorerStore = defineStore("explorer", () => {
     }
   };
 
+  const performSearch = async (query: string) => {
+    searchQuery.value = query;
+    if (!query.trim()) {
+      isSearching.value = false;
+      if (activeFolderId.value) {
+        await selectFolder(activeFolderId.value);
+      } else {
+        activeContents.value = { folders: [], files: [] };
+      }
+      return;
+    }
+
+    isSearching.value = true;
+    loadingContents.value = true;
+    // Clear active folder selection when searching
+    activeFolderId.value = null;
+
+    try {
+      activeContents.value = await search(query);
+    } catch (error) {
+      console.error("Failed to fetch search results:", error);
+    } finally {
+      loadingContents.value = false;
+    }
+  };
+
   return {
     folderTree,
     activeFolderId,
     activeContents,
     loadingTree,
     loadingContents,
+    isSearching,
+    searchQuery,
     loadTree,
     selectFolder,
+    performSearch,
   };
 });
